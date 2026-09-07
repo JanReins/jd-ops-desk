@@ -17,7 +17,7 @@ export type Court = "mine" | "theirs" | "done";
 /** Work I can do now vs work I am watching. */
 export function getCourt(status: ObligationStatus): Court {
   if (status === "Done" || status === "Not applicable") return "done";
-  if (status === "Waiting on client" || status === "Blocked" || status === "Ready to lodge") {
+  if (status === "Waiting on client" || status === "Blocked") {
     return "theirs";
   }
   return "mine";

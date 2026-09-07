@@ -150,7 +150,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setClients(loadedClients.sort((a, b) => a.name.localeCompare(b.name)));
     setObligations(loadedObligations.sort((a, b) => (a.order || 0) - (b.order || 0)));
     setPersonalTasks(
-      (loadedPersonal && loadedPersonal.length > 0 ? loadedPersonal : DEMO_PERSONAL_TASKS).sort(
+      (loadedPersonal !== null && loadedPersonal !== undefined ? loadedPersonal : DEMO_PERSONAL_TASKS).sort(
         (a, b) => a.order - b.order,
       ),
     );
@@ -164,17 +164,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const initData = async () => {
       try {
         await openDatabase();
-        const seedVersion = await getMeta<number>(SEED_VERSION_KEY);
+        const loadedClients = await getAllClients(UID);
 
-        if (seedVersion !== SEED_VERSION) {
-          await clearUserData(UID);
+        if (loadedClients.length === 0) {
           await seedInitialDemoData(UID, stampClients(), stampObligations());
           await setMeta(SEED_VERSION_KEY, SEED_VERSION);
           await setMeta(PERSONAL_KEY, DEMO_PERSONAL_TASKS);
         }
 
-        const [loadedClients, loadedObs] = await Promise.all([getAllClients(UID), getAllObligations(UID)]);
-        const missing = generateRollingHorizon(loadedClients, loadedObs, 2);
+        const [currClients, loadedObs] = await Promise.all([getAllClients(UID), getAllObligations(UID)]);
+        const missing = generateRollingHorizon(currClients, loadedObs, 2);
         if (missing.length > 0) {
           await batchPutObligations(stampCandidates(missing));
         }
